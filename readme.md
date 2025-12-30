@@ -1,5 +1,7 @@
 # Android kernel build + boot image repack container
 
+Based on https://github.com/ravindu644/Android-Kernel-Tutorials
+
 I made this as a quick start to build duoqin_f21pro kernel from https://github.com/JamiKettunen/android_kernel_duoqin_mt6761.
 Building a kernel on mac os is hard, this container should get you started.
 
