@@ -1,7 +1,6 @@
 FROM --platform=linux/amd64 ubuntu:24.04
 
-ENV ARCH=arm64
-
+# necessary libs (could be too much)
 RUN apt update && apt upgrade -fy && \
     apt install -y \
       git openjdk-8-jdk git-core gnupg flex bison gperf build-essential zip \
@@ -12,7 +11,13 @@ RUN apt update && apt upgrade -fy && \
         default-jdk libc6-dev libncurses-dev libreadline-dev libgl1 \
         make gcc g++ bc grep tofrodos python3-markdown zlib1g-dev libtinfo6 \
         repo cpio kmod openssl libelf-dev libssl-dev --fix-missing 
+	
+# build env variables
+ENV BUILD_CROSS_COMPILE="/toolchain/gcc/bin/aarch64-none-linux-gnu-"
+ENV BUILD_CC="/toolchain/clang/bin/clang"
+ENV ARCH=arm64
 
+# toolchain setup + magiskboot
 RUN mkdir /toolchain
 
 RUN cd /tmp && \
@@ -25,30 +30,18 @@ RUN mkdir -p /toolchain/clang/ && \
 	  wget --no-verbose https://github.com/ravindu644/Android-Kernel-Tutorials/releases/download/toolchain/clang-r383902.tar.gz 2> /dev/null >/dev/null && \
 		tar xf clang-r383902.tar.gz -C /toolchain/clang/
 
-ENV BUILD_CROSS_COMPILE="/toolchain/gcc/bin/aarch64-none-linux-gnu-"
-ENV BUILD_CC="/toolchain/clang/bin/clang"
-
 RUN cd /tmp && \
     wget https://github.com/topjohnwu/Magisk/releases/download/v30.6/Magisk-v30.6.apk  && \
 		unzip Magisk-v30.6.apk && \
 		chmod +x lib/x86_64/libmagiskboot.so && \
 		mv lib/x86_64/libmagiskboot.so /usr/bin/magiskboot
+
+# deploy script
 	
-RUN cd && mkdir -p .config && git clone https://github.com/olaaaf/neovim.git .config/nvim
-
 COPY deploy.sh /usr/bin/deploy
-RUN chmod +x /usr/bin/deploy
 COPY gitignore /.gitignore_global
-
+RUN chmod +x /usr/bin/deploy
 RUN git config --global core.excludesfile /.gitignore_global
 
 RUN echo "export ARGS='-C /kernel O=/kernel/out -j$(nproc) ARCH=arm64 CROSS_COMPILE=${BUILD_CROSS_COMPILE} CC=${BUILD_CC} CLANG_TRIPLE=aarch64-none-linux-gnu- KCFLAGS=-w CONFIG_SECTION_MISMATCH_WARN_ONLY=y'" >> /root/.bashrc
-
 RUN echo "echo 'Put boot.bin into the output folder, run deploy to repack it with the custom kernel'" >> /root/.bashrc
-
-RUN echo "alias vi=nvim" >> /root/.bashrc
-RUN cd /tmp && curl -LO https://github.com/neovim/neovim/releases/latest/download/nvim-linux-x86_64.tar.gz && \
-	  rm -rf /opt/nvim-linux-x86_64 && \
-		tar -C /opt -xzf nvim-linux-x86_64.tar.gz
-	
-RUN echo "export PATH='$PATH:/opt/nvim-linux-x86_64/bin'" >> /root/.bashrc

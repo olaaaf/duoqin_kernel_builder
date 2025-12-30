@@ -6,7 +6,7 @@ services:
 
     volumes:
       - kernel:/kernel
-      - ~/Desktop/outputs:/output:Z
+      - ~/Desktop/output:/output:Z
 
     command: ["bash"]
     stdin_open: true
