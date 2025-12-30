@@ -1,0 +1,16 @@
+services:
+  android:
+    build:
+      context: .
+      dockerfile: android.dockerfile
+
+    volumes:
+      - kernel:/kernel
+      - ~/Desktop/outputs:/output:Z
+
+    command: ["bash"]
+    stdin_open: true
+    tty: true
+
+volumes:
+  kernel: {}
